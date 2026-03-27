@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Mic, Settings, LogOut, Plus } from "lucide-react";
+import { Mic, Settings, LogOut, Plus, Check } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { auth } from "../firebase.js"; // Firebase Auth
@@ -24,6 +24,7 @@ const ProductSelection = () => {
   const [error, setError] = useState(null);
 
   const db = getDatabase();
+  const billRef = useRef(null);
 
   const translations = {
     English: {
@@ -154,8 +155,8 @@ const ProductSelection = () => {
         language === "English"
           ? p.name.toLowerCase().includes(transcript)
           : language === "தமிழ்"
-          ? p.tamilName?.toLowerCase().includes(transcript)
-          : p.hindiName?.toLowerCase().includes(transcript)
+            ? p.tamilName?.toLowerCase().includes(transcript)
+            : p.hindiName?.toLowerCase().includes(transcript)
       );
       if (product) {
         toggleSelection(product);
@@ -210,6 +211,10 @@ const ProductSelection = () => {
     });
     setSelectedProducts([]);
     toast.success("Products added to bill", { position: "top-right", autoClose: 2000 });
+    // Auto-scroll to bill section
+    setTimeout(() => {
+      billRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   };
 
   const updateQuantity = (id, newQty) => {
@@ -341,216 +346,376 @@ const ProductSelection = () => {
 
   return (
     <motion.div
-      className={`min-h-screen p-6 ${darkMode ? "bg-gray-900 text-white" : "bg-gradient-to-br from-gray-50 to-teal-50 text-gray-900"}`}
+      className={`min-h-screen p-6 pb-32 transition-colors duration-500 ${darkMode ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"}`}
       variants={pageVariants}
       initial="initial"
       animate="animate"
     >
-      <ToastContainer />
+      <ToastContainer theme={darkMode ? "dark" : "light"} />
       <motion.header
-        className="flex justify-between items-center mb-8 bg-gradient-to-r from-teal-500 to-green-500 p-4 rounded-xl shadow-lg"
+        className={`sticky top-4 z-40 flex justify-between items-center mb-8 p-4 rounded-2xl shadow-xl backdrop-blur-md border border-white/20
+          ${darkMode ? "bg-slate-900/80" : "bg-white/80"}`}
         variants={containerVariants}
       >
         <div className="flex items-center space-x-4">
-          <motion.img
-            src="https://i.pinimg.com/736x/a8/f4/6a/a8f46ad882c293af8c3fe011ce13bbb0.jpg"
-            alt="Logo"
-            className="w-12 h-12 rounded-full border-2 border-white"
-            whileHover={{ scale: 1.1, rotate: 360 }}
-          />
-          <h1 className="text-2xl font-bold text-white">{translations[language].farmersMarket}</h1>
+          <motion.div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-violet-500 rounded-full blur animate-pulse opacity-70"></div>
+            <motion.img
+              src="https://i.pinimg.com/736x/a8/f4/6a/a8f46ad882c293af8c3fe011ce13bbb0.jpg"
+              alt="Logo"
+              className="relative w-12 h-12 rounded-full border-2 border-white shadow-md z-10"
+              whileHover={{ scale: 1.1, rotate: 360 }}
+            />
+          </motion.div>
+          <h1 className="text-2xl font-black bg-gradient-to-r from-emerald-600 to-violet-600 bg-clip-text text-transparent">
+            {translations[language].farmersMarket}
+          </h1>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <motion.button
             onClick={() => setShowSettings(!showSettings)}
-            className="p-2 bg-white/10 rounded-full hover:bg-white/20"
-            whileHover={{ scale: 1.1 }}
+            className={`p-2.5 rounded-xl transition-all ${darkMode ? "bg-slate-800 hover:bg-slate-700 text-slate-300" : "bg-slate-100 hover:bg-slate-200 text-slate-600"}`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <Settings className="w-6 h-6 text-white" />
+            <Settings className="w-5 h-5" />
           </motion.button>
           <motion.button
             onClick={() => navigate("/dashboard")}
-            className="p-2 bg-white/10 rounded-full hover:bg-white/20"
-            whileHover={{ scale: 1.1 }}
+            className={`p-2.5 rounded-xl transition-all ${darkMode ? "bg-red-900/20 hover:bg-red-900/30 text-red-400" : "bg-red-50 hover:bg-red-100 text-red-500"}`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <LogOut className="w-6 h-6 text-white" />
+            <LogOut className="w-5 h-5" />
           </motion.button>
         </div>
       </motion.header>
 
       {showSettings && (
         <motion.div
-          className="absolute top-20 right-6 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-xl z-10"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          className={`absolute top-24 right-6 p-5 rounded-2xl shadow-2xl z-50 border w-64 backdrop-blur-xl
+            ${darkMode ? "bg-slate-900/95 border-slate-700" : "bg-white/95 border-slate-200"}`}
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
         >
-          <div className="space-y-3">
-            <div>
-              <p className="font-semibold text-teal-800 dark:text-teal-200">{farmerInfo.name}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-300">{farmerInfo.email}</p>
+          <div className="space-y-4">
+            <div className="pb-3 border-b border-gray-200 dark:border-gray-700">
+              <p className={`font-bold text-lg ${darkMode ? "text-slate-100" : "text-slate-800"}`}>{farmerInfo.name}</p>
+              <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{farmerInfo.email}</p>
             </div>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="w-full p-2 rounded-lg border border-teal-200 dark:border-teal-600 bg-white dark:bg-gray-700 text-black dark:text-white"
-            >
-              <option value="English">English</option>
-              <option value="தமிழ்">தமிழ் (Tamil)</option>
-              <option value="हिन्दी">हिन्दी (Hindi)</option>
-            </select>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Language</label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className={`w-full p-2.5 rounded-xl border appearance-none outline-none transition-all
+                  ${darkMode
+                    ? "bg-slate-800 border-slate-700 text-white focus:border-emerald-500"
+                    : "bg-slate-50 border-slate-200 text-slate-800 focus:border-emerald-500"}`}
+              >
+                <option value="English">English</option>
+                <option value="தமிழ்">தமிழ் (Tamil)</option>
+                <option value="हिन्दी">हिन्दी (Hindi)</option>
+              </select>
+            </div>
+
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className="w-full p-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+              className={`w-full p-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2
+                ${darkMode
+                  ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
-              {darkMode ? "Light Mode" : "Dark Mode"}
+              {darkMode ? "🌙 Dark Mode" : "☀️ Light Mode"}
             </button>
           </div>
         </motion.div>
       )}
 
       <motion.div className="max-w-7xl mx-auto" variants={containerVariants}>
-        <div className="flex items-center space-x-4 mb-6">
-          <input
-            type="text"
-            placeholder={translations[language].searchProducts}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 p-3 rounded-lg border border-teal-300 dark:border-teal-600 bg-white dark:bg-gray-800 text-black dark:text-white focus:ring-2 focus:ring-teal-400 focus:outline-none"
-          />
-          <motion.button
-            onClick={() => setIsListening(!isListening)}
-            className={`p-3 rounded-full ${isListening ? "bg-red-500" : "bg-teal-500"} text-white`}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Mic className="w-6 h-6" />
-          </motion.button>
+
+        {/* Search Bar */}
+        <div className="relative mb-10 group">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-violet-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
+          <div className={`relative flex items-center p-2 rounded-2xl border shadow-lg transition-all
+            ${darkMode ? "bg-slate-900 border-slate-700" : "bg-white border-white"}`}>
+
+            <input
+              type="text"
+              placeholder={translations[language].searchProducts}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`flex-1 p-3 bg-transparent text-lg outline-none
+                ${darkMode ? "text-white placeholder-slate-500" : "text-slate-800 placeholder-slate-400"}`}
+            />
+
+            <motion.button
+              onClick={() => setIsListening(!isListening)}
+              className={`relative p-4 rounded-xl text-white transition-all shadow-md overflow-hidden ${isListening
+                  ? "bg-rose-500 shadow-rose-500/30"
+                  : "bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-emerald-500/30"
+                }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Mic className={`w-6 h-6 ${isListening ? "animate-pulse" : ""}`} />
+            </motion.button>
+          </div>
         </div>
 
-        {/* Display all products directly */}
-        <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8" variants={containerVariants}>
-          {allProducts.map((product) => (
-            <motion.div
-              key={product.id}
-              variants={itemVariants}
-              onClick={() => toggleSelection(product)}
-              className={`p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer border-2 ${
-                selectedProducts.some((p) => p.id === product.id) ? "border-teal-500" : "border-transparent"
-              }`}
-            >
-              <img src={product.image} alt={product.name} className="w-full h-40 object-cover rounded-lg mb-3" />
-              <h3 className="text-lg font-semibold text-teal-800 dark:text-teal-200">
-                {language === "English" ? product.name : language === "தமிழ்" ? product.tamilName : product.hindiName}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">{product.weight}</p>
-            </motion.div>
-          ))}
+        {/* Product Grid */}
+        <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-12" variants={containerVariants}>
+          {allProducts.map((product) => {
+            const isSelected = selectedProducts.some((p) => p.id === product.id);
+            return (
+              <motion.div
+                key={product.id}
+                variants={itemVariants}
+                onClick={() => toggleSelection(product)}
+                whileHover={{ y: -5 }}
+                whileTap={{ scale: 0.98 }}
+                className={`group relative flex flex-col items-center p-3 rounded-2xl transition-all cursor-pointer border shadow-sm h-full
+                  ${isSelected
+                    ? darkMode
+                      ? "bg-emerald-900/20 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+                      : "bg-emerald-50 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+                    : darkMode
+                      ? "bg-slate-900 border-slate-800 hover:border-slate-600"
+                      : "bg-white border-slate-100 hover:border-emerald-200"
+                  }`}
+              >
+                {/* Image Container */}
+                <div className={`relative w-full aspect-square mb-4 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800`}>
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  {/* Selection Overlay */}
+                  {isSelected && (
+                    <div className="absolute inset-0 bg-emerald-500/20 z-10 flex items-center justify-center backdrop-blur-[2px]">
+                      <motion.div
+                        initial={{ scale: 0, rotate: -45 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        type="spring"
+                        className="bg-emerald-500 text-white p-2.5 rounded-full shadow-lg"
+                      >
+                        <Check className="w-6 h-6" strokeWidth={3} />
+                      </motion.div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="text-center w-full mt-auto">
+                  <h3 className={`text-sm font-bold truncate transition-colors mb-1
+                    ${isSelected
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : darkMode ? "text-slate-200" : "text-slate-700"}`}>
+                    {language === "English" ? product.name : language === "தமிழ்" ? product.tamilName : product.hindiName}
+                  </h3>
+                  <div className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
+                    ${darkMode ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
+                    {product.weight}
+                  </div>
+                </div>
+
+                {/* Selection Indicator Ring (Subtle) */}
+                {!isSelected && (
+                  <div className={`absolute top-3 right-3 w-4 h-4 rounded-full border-2 transition-colors
+                    ${darkMode ? "border-slate-600 group-hover:border-emerald-500" : "border-slate-300 group-hover:border-emerald-500"}`}>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
         </motion.div>
 
         {selectedProducts.length > 0 && (
           <motion.button
             onClick={addToBill}
-            className="fixed bottom-10 right-10 p-4 bg-teal-600 text-white rounded-full shadow-lg hover:bg-teal-700 z-20 flex items-center space-x-2"
+            className={`fixed bottom-8 right-8 px-8 py-4 rounded-full shadow-2xl z-50 flex items-center gap-4 font-bold text-lg border-4 transition-transform
+              bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:scale-105 active:scale-95
+              ${darkMode ? "border-slate-900 shadow-emerald-900/40" : "border-white shadow-emerald-500/30"}`}
             variants={itemVariants}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
           >
-            <Plus className="w-6 h-6" />
+            <div className="bg-white text-emerald-700 w-8 h-8 rounded-full flex items-center justify-center text-sm font-extrabold shadow-sm">
+              {selectedProducts.length}
+            </div>
             <span>{translations[language].addSelectedProducts}</span>
+            <Plus className="w-6 h-6" strokeWidth={3} />
           </motion.button>
         )}
 
+        {/* Bill Section */}
         {billList.length > 0 && (
-          <motion.div className="mt-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg" variants={containerVariants}>
-            <h2 className="text-2xl font-bold text-teal-800 dark:text-teal-200 mb-4">{translations[language].yourBill}</h2>
+          <motion.div
+            ref={billRef}
+            className={`mt-16 p-8 rounded-3xl shadow-xl relative overflow-hidden border
+              ${darkMode ? "bg-slate-900 border-slate-700" : "bg-white border-slate-100"}`}
+            variants={containerVariants}
+          >
+            {/* Background Decor */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+
+            <h2 className={`text-3xl font-black mb-8 flex items-center gap-3 ${darkMode ? "text-white" : "text-slate-800"}`}>
+              <span className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600 dark:text-emerald-400">🧾</span>
+              {translations[language].yourBill}
+            </h2>
+
             {["Vegetables", "Fruits", "Seeds", "Dairy Products", "Herbs", "Fertilizers"].map((category) =>
               categorizedBill[category].length > 0 && (
-                <div key={category} className="mb-6">
-                  <h3 className="text-xl font-semibold text-teal-700 dark:text-teal-300">{translations[language][category.toLowerCase()]}</h3>
-                  {categorizedBill[category].map((item) => (
-                    <motion.div
-                      key={item.id}
-                      className="flex items-center justify-between p-4 border-b border-teal-100 dark:border-teal-700"
-                      variants={itemVariants}
-                    >
-                      <div className="flex items-center space-x-4">
-                        <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg" />
-                        <div>
-                          <p className="font-medium text-teal-800 dark:text-teal-200">
-                            {language === "English" ? item.name : language === "தமிழ்" ? item.tamilName : item.hindiName}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{item.weight}</p>
+                <div key={category} className="mb-8">
+                  <h3 className={`text-lg font-bold mb-4 uppercase tracking-widest text-xs flex items-center gap-2
+                    ${darkMode ? "text-emerald-400" : "text-emerald-600"}`}>
+                    <span className="w-1 h-1 rounded-full bg-current"></span>
+                    {translations[language][category.toLowerCase()]}
+                  </h3>
+
+                  <div className="space-y-3">
+                    {categorizedBill[category].map((item) => (
+                      <motion.div
+                        key={item.id}
+                        layout
+                        className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:bg-opacity-50
+                          ${darkMode ? "bg-slate-800/50 border-slate-700 hover:bg-slate-800" : "bg-slate-50 border-slate-100 hover:bg-white hover:shadow-md"}`}
+                        variants={itemVariants}
+                      >
+                        <div className="flex items-center gap-4">
+                          <img src={item.image} alt={item.name} className="w-14 h-14 rounded-lg object-cover shadow-sm bg-gray-200" />
+                          <div>
+                            <p className={`font-bold text-lg ${darkMode ? "text-slate-200" : "text-slate-700"}`}>
+                              {language === "English" ? item.name : language === "தமிழ்" ? item.tamilName : item.hindiName}
+                            </p>
+                            <p className={`text-xs font-medium ${darkMode ? "text-slate-500" : "text-slate-400"}`}>{item.weight}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <input
-                          type="number"
-                          value={item.qty}
-                          onChange={(e) => updateQuantity(item.id, e.target.value)}
-                          className="w-16 p-2 rounded-lg border border-teal-300 dark:border-teal-600 bg-white dark:bg-gray-700 text-black dark:text-white focus:ring-2 focus:ring-teal-400 focus:outline-none"
-                          min="0"
-                          placeholder="Qty"
-                        />
-                        <input
-                          type="number"
-                          value={item.customPrice}
-                          onChange={(e) => updateCustomPrice(item.id, e.target.value)}
-                          className="w-20 p-2 rounded-lg border border-teal-300 dark:border-teal-600 bg-white dark:bg-gray-700 text-black dark:text-white focus:ring-2 focus:ring-teal-400 focus:outline-none"
-                          min="0"
-                          placeholder="Price"
-                        />
-                        <p className="text-teal-700 dark:text-teal-300 font-medium">₹{item.finalPrice.toFixed(2)}</p>
-                        <button onClick={() => removeItem(item.id)} className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
-                          ✕
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
-                  <p className="text-right font-semibold text-teal-800 dark:text-teal-200 mt-2">
-                    {translations[language].subtotal}: ₹{categorizedBill[category].reduce((sum, item) => sum + Number(item.finalPrice), 0).toFixed(2)}
-                  </p>
+
+                        <div className="flex items-center gap-4">
+                          <div className="flex flex-col items-end">
+                            <label className="text-[10px] uppercase font-bold text-gray-400 mb-1">Qty</label>
+                            <input
+                              type="number"
+                              value={item.qty}
+                              onChange={(e) => updateQuantity(item.id, e.target.value)}
+                              className={`w-20 p-2 text-center rounded-lg font-bold outline-none ring-1 focus:ring-2 transition-all
+                                ${darkMode
+                                  ? "bg-slate-900 border-slate-700 text-white ring-slate-700 focus:ring-emerald-500"
+                                  : "bg-white border-slate-200 text-slate-800 ring-slate-200 focus:ring-emerald-500"}`}
+                              min="0"
+                            />
+                          </div>
+
+                          <div className="flex flex-col items-end">
+                            <label className="text-[10px] uppercase font-bold text-gray-400 mb-1">Price</label>
+                            <input
+                              type="number"
+                              value={item.customPrice}
+                              onChange={(e) => updateCustomPrice(item.id, e.target.value)}
+                              className={`w-24 p-2 text-center rounded-lg font-bold outline-none ring-1 focus:ring-2 transition-all
+                                ${darkMode
+                                  ? "bg-slate-900 border-slate-700 text-white ring-slate-700 focus:ring-violet-500"
+                                  : "bg-white border-slate-200 text-slate-800 ring-slate-200 focus:ring-violet-500"}`}
+                              min="0"
+                            />
+                          </div>
+
+                          <div className="w-24 text-right">
+                            <p className={`text-lg font-black ${darkMode ? "text-emerald-400" : "text-emerald-600"}`}>
+                              ₹{item.finalPrice.toFixed(0)}
+                            </p>
+                          </div>
+
+                          <button onClick={() => removeItem(item.id)} className="p-2 rounded-full hover:bg-red-100 text-red-400 hover:text-red-500 transition-colors">
+                            <LogOut className="w-5 h-5 opacity-0" /> {/* Hack for spacing if needed, or stick to X */}
+                            <span className="text-xl font-bold">×</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <div className={`mt-2 flex justify-end text-sm font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    {translations[language].subtotal}: <span className={`ml-2 ${darkMode ? "text-slate-200" : "text-slate-800"}`}>₹{categorizedBill[category].reduce((sum, item) => sum + Number(item.finalPrice), 0).toFixed(2)}</span>
+                  </div>
                 </div>
               )
             )}
-            <p className="text-2xl font-bold text-teal-800 dark:text-teal-200 text-right">
-              {translations[language].total}: ₹{totalAmount.toFixed(2)}
-            </p>
+
+            <div className={`mt-8 pt-8 border-t flex flex-col items-end gap-2 ${darkMode ? "border-slate-700" : "border-slate-200"}`}>
+              <div className="flex items-baseline gap-4">
+                <span className={`text-sm font-medium uppercase tracking-widest ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{translations[language].total}</span>
+                <span className={`text-4xl font-black ${darkMode ? "text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400" : "text-slate-800"}`}>
+                  ₹{totalAmount.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
             <motion.button
               onClick={handleSaveProducts}
               disabled={loading}
-              className={`mt-4 w-full py-3 ${loading ? "bg-gray-400" : "bg-teal-600"} text-white rounded-lg hover:bg-teal-700 shadow-md`}
+              className={`mt-8 w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-transform active:scale-[0.98]
+                bg-gradient-to-r from-emerald-600 to-violet-600 text-white hover:shadow-emerald-500/25
+                ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
               variants={itemVariants}
-              whileHover={{ scale: loading ? 1 : 1.05 }}
-              whileTap={{ scale: loading ? 1 : 0.95 }}
             >
-              {loading ? translations[language].saving : translations[language].saveToProducts}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  {translations[language].saving}
+                </span>
+              ) : (
+                translations[language].saveToProducts
+              )}
             </motion.button>
+
             {error && (
-              <motion.p className="text-red-600 dark:text-red-400 mt-2 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <motion.p className="text-red-500 mt-4 text-center font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 {error}
               </motion.p>
             )}
           </motion.div>
         )}
 
-        <motion.div className="mt-10 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg" variants={containerVariants}>
-          <h2 className="text-xl font-bold text-teal-800 dark:text-teal-200 mb-4">{translations[language].disputeSection}</h2>
-          <input
-            type="text"
-            value={newDispute}
-            onChange={(e) => setNewDispute(e.target.value)}
-            placeholder={translations[language].replyToQuery}
-            className="w-full p-3 rounded-lg border border-teal-300 dark:border-teal-600 bg-white dark:bg-gray-700 text-black dark:text-white focus:ring-2 focus:ring-teal-400 focus:outline-none"
-          />
-          <button
-            onClick={addDispute}
-            className="w-full p-3 mt-4 bg-teal-600 text-white rounded-lg hover:bg-teal-700 shadow-md"
-          >
-            {translations[language].submit}
-          </button>
-          {disputes.map((dispute, index) => (
-            <p key={index} className="mt-2 text-teal-700 dark:text-teal-300">{dispute}</p>
-          ))}
+        {/* Dispute Section */}
+        <motion.div className={`mt-12 p-8 rounded-3xl shadow-lg border ${darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"}`} variants={containerVariants}>
+          <h2 className={`text-xl font-bold mb-6 flex items-center gap-2 ${darkMode ? "text-slate-200" : "text-slate-800"}`}>
+            <span className="text-violet-500">💬</span>
+            {translations[language].disputeSection}
+          </h2>
+
+          <div className={`p-1 rounded-xl border focus-within:ring-2 focus-within:ring-violet-500 transition-all
+             ${darkMode ? "bg-slate-950 border-slate-700" : "bg-slate-50 border-slate-200"}`}>
+            <input
+              type="text"
+              value={newDispute}
+              onChange={(e) => setNewDispute(e.target.value)}
+              placeholder={translations[language].replyToQuery}
+              className="w-full p-3 bg-transparent outline-none"
+            />
+          </div>
+
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={addDispute}
+              className="px-8 py-3 bg-violet-600 text-white rounded-xl font-bold hover:bg-violet-700 transition-colors shadow-lg shadow-violet-500/20"
+            >
+              {translations[language].submit}
+            </button>
+          </div>
+
+          {disputes.length > 0 && (
+            <div className="mt-8 space-y-4">
+              {disputes.map((dispute, index) => (
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} key={index} className={`p-4 rounded-xl border-l-4 border-violet-500 ${darkMode ? "bg-slate-800" : "bg-slate-50"}`}>
+                  <p className={`${darkMode ? "text-slate-300" : "text-slate-700"}`}>{dispute}</p>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </motion.div>

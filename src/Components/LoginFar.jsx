@@ -214,9 +214,8 @@ const LoginFar = ({ setAuth }) => {
       </div>
 
       <div
-        className={`w-1/2 flex flex-col justify-center items-center p-10 bg-white transition-transform duration-500 ${
-          view === "signup" ? "-translate-x-full" : ""
-        }`}
+        className={`w-1/2 flex flex-col justify-center items-center p-10 bg-white transition-transform duration-500 ${view === "signup" ? "-translate-x-full" : ""
+          }`}
       >
         {loading ? (
           <div className="text-center">

@@ -42,7 +42,7 @@ const Login = () => {
                 />
               ))}
             </div>
-  
+
             <div className="mt-12 grid grid-cols-2 gap-6 text-sm">
               <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl shadow-inner">
                 <p className="font-bold text-yellow-300 text-lg">10K+</p>
@@ -84,7 +84,7 @@ const Login = () => {
                 />
               ))}
             </div>
-  
+
             <div className="mt-12 grid grid-cols-2 gap-6 text-sm">
               <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl shadow-inner">
                 <p className="font-bold text-rose-300 text-lg">50K+</p>
