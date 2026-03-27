@@ -13,14 +13,14 @@ import {
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAzBNj20JCE39AUvRXWoV5VlgNaiL-o_94",
-  authDomain: "sendora-9e14f.firebaseapp.com",
-  databaseURL: "https://sendora-9e14f-default-rtdb.firebaseio.com",
-  projectId: "sendora-9e14f",
-  storageBucket: "sendora-9e14f.appspot.com",
-  messagingSenderId: "844599229027",
-  appId: "1:844599229027:web:a6d6751f4d50d6680dd656",
-  measurementId: "G-HEYHYSGKBL"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);

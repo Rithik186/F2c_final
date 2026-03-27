@@ -51,7 +51,7 @@ const Payment = () => {
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = () => {
       const options = {
-        key: "YOUR_RAZORPAY_KEY_ID", // Replace with your Razorpay Key ID
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Use Razorpay Key ID from .env
         amount: totalAmount * 100, // Amount in paise
         currency: "INR",
         name: "Farmer's Market",

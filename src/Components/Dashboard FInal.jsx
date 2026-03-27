@@ -527,7 +527,7 @@ const Dashboard = () => {
             // Weather & News logic from original code
             const fetchWeather = async (lat, lon) => {
                 try {
-                    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=ccd8b058961d7fefa87f1c29421d8bdf&units=metric`);
+                    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}&units=metric`);
                     const data = await res.json();
                     if (data.cod === 200) {
                         setWeather({ main: data.main, weather: data.weather, name: data.name, country: data.sys.country });
@@ -581,7 +581,7 @@ const Dashboard = () => {
                 ];
 
                 try {
-                    const apiKey = "AIzaSyDZ5Pzwp89A-AOr9KSVKWfuRSQazB_4lIk";
+                    const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
                     const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=farming+technology+news&type=video&maxResults=5&key=${apiKey}`);
 
                     if (!res.ok) throw new Error(`API Error: ${res.status}`);

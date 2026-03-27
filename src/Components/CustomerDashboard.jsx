@@ -411,7 +411,7 @@ const CustomerDashboard = () => {
         const amountInPaise = Math.round(totalAmount * 100);
 
         const options = {
-            key: 'rzp_test_SW7EfGJextqmyR',
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID,
             amount: amountInPaise > 0 ? amountInPaise : 100,
             currency: 'INR',
             name: 'FarmFresh',
@@ -443,36 +443,180 @@ const CustomerDashboard = () => {
 
     const sendOrderEmail = async (customerEmail, customerName, order, templateType) => {
         if (!customerEmail) return;
-        let message = '';
+
+        const brevoApiKey = import.meta.env.VITE_BREVO_API_KEY;
+        const senderMail = "farmer2consumer00@gmail.com";
+        const senderName = "FarmFresh";
+
+        let subject = '';
+        let htmlContent = '';
+
         if (templateType === 'CONFIRMATION') {
-            message = `Hello ${customerName},\n\nYour order ${order.orderId} has been successfully confirmed!\n\nBILL DETAILS:\n------------------------\n` + 
-                      order.products.map(p => `${p.productName} (${p.quantity}) : ₹${parseFloat(p.totalPrice).toFixed(2)}`).join('\n') +
-                      `\n------------------------\nTOTAL PAID: ₹${parseFloat(order.totalAmount).toFixed(2)}\nPayment Method: ${order.paymentMethod?.type || 'Online'}\n\nThank you for shopping with FarmFresh!`;
+            subject = `Order Confirmed - ${order.orderId}`;
+            htmlContent = `
+                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 800px; margin: 0 auto; background-color: #f3f4f6; padding: 20px;">
+                    <div style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e5e7eb;">
+                        <div style="background: linear-gradient(135deg, #14b8a6, #0d9488); padding: 30px; text-align: center; color: white;">
+                            <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px;">✓ Order Confirmed!</h1>
+                            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Thank you for your purchase, ${customerName}</p>
+                        </div>
+                        
+                        <div style="padding: 30px;">
+                            <p style="font-size: 16px; color: #374151; line-height: 1.6; margin-bottom: 30px;">Your order <strong>${order.orderId}</strong> has been successfully placed. Here is your official colorful invoice:</p>
+                            
+                            <!-- Embedded Invoice -->
+                            <div style="border: 1px solid #14b8a6; border-radius: 8px; overflow: hidden; margin-bottom: 30px;">
+                                <div style="display: table; width: 100%; border-bottom: 2px solid #14b8a6; padding: 20px; box-sizing: border-box; background-color: #f0fdfa;">
+                                    <div style="display: table-cell; vertical-align: middle;">
+                                        <h1 style="margin: 0; color: #14b8a6; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;">FarmFresh INVOICE</h1>
+                                    </div>
+                                    <div style="display: table-cell; text-align: right; color: #4b5563; vertical-align: middle; font-size: 14px;">
+                                        <p style="margin: 2px 0;">Order ID: ${order.orderId}</p>
+                                        <p style="margin: 2px 0;">Date: ${new Date().toLocaleString()}</p>
+                                    </div>
+                                </div>
+                                <div style="padding: 20px;">
+                                    <h4 style="margin:0 0 10px 0; color: #0f766e; font-size: 16px;">Billed To:</h4>
+                                    <p style="margin: 5px 0; font-size: 15px; color: #374151;"><strong>${customerName}</strong></p>
+                                    <p style="margin: 5px 0; font-size: 15px; color: #374151;">${customerEmail}</p>
+                                    <p style="margin: 5px 0; font-size: 15px; color: #374151;">Payment Method: <strong>${order.paymentMethod?.type || 'Online'}</strong></p>
+                                </div>
+                                
+                                <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
+                                    <thead>
+                                        <tr>
+                                            <th style="background-color: #14b8a6; color: white; padding: 12px 15px; text-align: left; font-weight: 600;">Product Description</th>
+                                            <th style="background-color: #14b8a6; color: white; padding: 12px 15px; text-align: center; font-weight: 600;">Qty</th>
+                                            <th style="background-color: #14b8a6; color: white; padding: 12px 15px; text-align: right; font-weight: 600;">Unit Price</th>
+                                            <th style="background-color: #14b8a6; color: white; padding: 12px 15px; text-align: right; font-weight: 600;">Total Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${order.products ? order.products.map((p, index) => `
+                                            <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f9fafb'}; border-bottom: 1px solid #e5e7eb;">
+                                                <td style="padding: 15px; color: #1f2937;">
+                                                    <span style="font-weight: 600; font-size: 16px;">${p.productName}</span><br>
+                                                    <span style="font-size: 13px; color: #6b7280; margin-top: 4px; display: inline-block;">Sold by: <strong>${p.farmerName || 'Unknown Farmer'}</strong> (ID: ${p.farmerId})</span>
+                                                </td>
+                                                <td style="padding: 15px; text-align: center; color: #4b5563; font-weight: 500;">${p.quantity}</td>
+                                                <td style="padding: 15px; text-align: right; color: #374151;">₹${parseFloat(p.price || 0).toFixed(2)}</td>
+                                                <td style="padding: 15px; text-align: right; color: #111827; font-weight: 600;">₹${parseFloat(p.totalPrice || 0).toFixed(2)}</td>
+                                            </tr>
+                                        `).join('') : ''}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="background-color: #115e59; color: white;">
+                                            <td colspan="3" style="padding: 15px; font-weight: bold; text-align: right; font-size: 16px;">Grand Total Paid:</td>
+                                            <td style="padding: 15px; font-weight: bold; text-align: right; font-size: 18px;">₹${parseFloat(order.totalAmount || 0).toFixed(2)}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <!-- End Embedded Invoice -->
+                            
+                            <p style="font-size: 15px; color: #6b7280; margin-top: 30px; text-align: center;">Warm Regards,<br><strong style="color: #14b8a6; font-size: 18px;">FarmFresh Team</strong></p>
+                        </div>
+                    </div>
+                </div>
+            `;
         } else {
-            message = `Hello ${customerName},\n\nYour order ${order.orderId} has been cancelled. If any payment was deducted, it will be refunded within 3-5 business days.\n\nThank you for choosing FarmFresh!`;
+            subject = `Order Cancelled - ${order.orderId}`;
+            htmlContent = `
+                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 800px; margin: 0 auto; background-color: #f3f4f6; padding: 20px;">
+                    <div style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e5e7eb;">
+                        <div style="background: linear-gradient(135deg, #f43f5e, #be123c); padding: 30px; text-align: center; color: white;">
+                            <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px;">✕ Order Cancelled</h1>
+                            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Hi ${customerName},</p>
+                        </div>
+                        
+                        <div style="padding: 30px;">
+                            <p style="font-size: 16px; color: #374151; line-height: 1.6; margin-bottom: 20px;">We're writing to confirm that your order <strong>${order.orderId}</strong> has been successfully cancelled as requested.</p>
+                            
+                            <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 20px; border-radius: 4px; margin-bottom: 30px;">
+                                <h3 style="margin: 0 0 10px 0; color: #b91c1c; font-size: 16px;">Refund Details</h3>
+                                <p style="margin: 0; color: #7f1d1d; font-size: 15px;">If any payment was already deducted, the full amount of <strong>₹${parseFloat(order.totalAmount || 0).toFixed(2)}</strong> will be automatically refunded to your original payment method (${order.paymentMethod?.type || 'Online'}) within 3-5 business days.</p>
+                            </div>
+                            
+                            <!-- Embedded Cancelled Invoice -->
+                            <div style="border: 1px solid #ef4444; border-radius: 8px; overflow: hidden; margin-bottom: 30px;">
+                                <div style="display: table; width: 100%; border-bottom: 2px solid #ef4444; padding: 20px; box-sizing: border-box; background-color: #fef2f2;">
+                                    <div style="display: table-cell; vertical-align: middle;">
+                                        <h1 style="margin: 0; color: #ef4444; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;">CANCELLED INVOICE</h1>
+                                    </div>
+                                    <div style="display: table-cell; text-align: right; color: #4b5563; vertical-align: middle; font-size: 14px;">
+                                        <p style="margin: 2px 0;">Order ID: ${order.orderId}</p>
+                                        <p style="margin: 2px 0;">Date: ${new Date().toLocaleString()}</p>
+                                    </div>
+                                </div>
+                                <div style="padding: 20px;">
+                                    <h4 style="margin:0 0 10px 0; color: #991b1b; font-size: 16px;">Billed To:</h4>
+                                    <p style="margin: 5px 0; font-size: 15px; color: #374151;"><strong>${customerName}</strong></p>
+                                    <p style="margin: 5px 0; font-size: 15px; color: #374151;">${customerEmail}</p>
+                                </div>
+                                
+                                <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
+                                    <thead>
+                                        <tr>
+                                            <th style="background-color: #ef4444; color: white; padding: 12px 15px; text-align: left; font-weight: 600;">Product Description</th>
+                                            <th style="background-color: #ef4444; color: white; padding: 12px 15px; text-align: center; font-weight: 600;">Qty</th>
+                                            <th style="background-color: #ef4444; color: white; padding: 12px 15px; text-align: right; font-weight: 600;">Unit Price</th>
+                                            <th style="background-color: #ef4444; color: white; padding: 12px 15px; text-align: right; font-weight: 600;">Total Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${order.products ? order.products.map((p, index) => `
+                                            <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f9fafb'}; border-bottom: 1px solid #e5e7eb;">
+                                                <td style="padding: 15px; color: #1f2937; text-decoration: line-through;">
+                                                    <span style="font-weight: 600; font-size: 16px;">${p.productName}</span><br>
+                                                    <span style="font-size: 13px; color: #6b7280; margin-top: 4px; display: inline-block; text-decoration: none;">Sold by: <strong>${p.farmerName || 'Unknown Farmer'}</strong> (ID: ${p.farmerId})</span>
+                                                </td>
+                                                <td style="padding: 15px; text-align: center; color: #4b5563; font-weight: 500;">${p.quantity}</td>
+                                                <td style="padding: 15px; text-align: right; color: #374151;">₹${parseFloat(p.price || 0).toFixed(2)}</td>
+                                                <td style="padding: 15px; text-align: right; color: #111827; font-weight: 600;">₹${parseFloat(p.totalPrice || 0).toFixed(2)}</td>
+                                            </tr>
+                                        `).join('') : ''}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="background-color: #991b1b; color: white;">
+                                            <td colspan="3" style="padding: 15px; font-weight: bold; text-align: right; font-size: 16px;">Refunded Total:</td>
+                                            <td style="padding: 15px; font-weight: bold; text-align: right; font-size: 18px;">₹${parseFloat(order.totalAmount || 0).toFixed(2)}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            
+                            <p style="font-size: 15px; color: #6b7280; margin-top: 30px; text-align: center;">Warm Regards,<br><strong style="color: #f43f5e; font-size: 18px;">FarmFresh Team</strong></p>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        const data = {
-            service_id: 'default_service', 
-            template_id: 'template_id', 
-            user_id: 'public_key',
-            template_params: {
-                to_name: customerName,
-                to_email: customerEmail,
-                message: message,
-                order_id: order.orderId,
-            }
+        const emailData = {
+            sender: { name: senderName, email: senderMail },
+            to: [{ email: customerEmail, name: customerName }],
+            subject: subject,
+            htmlContent: htmlContent
         };
 
         try {
-            const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+            const res = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': brevoApiKey,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify(emailData)
             });
-            if (res.ok) console.log(`Email sent: ${templateType}`);
+            if (res.ok) {
+                console.log(`Brevo Email sent successfully: ${templateType}`);
+            } else {
+                const err = await res.json();
+                console.error('Brevo Email sending failed:', err);
+            }
         } catch (error) {
-            console.error('Email sending failed:', error);
+            console.error('Brevo Email sending error:', error);
         }
     };
 
@@ -506,14 +650,18 @@ const CustomerDashboard = () => {
             orderDateTime: orderDate,
             customerId: uid,
             customerName: customer.name,
-            products: cart.map((item) => ({
-                productName: item.name,
-                productId: item.id,
-                farmerId: item.farmerId,
-                quantity: item.qty,
-                price: item.price,
-                totalPrice: item.qty * item.price,
-            })),
+            products: cart.map((item) => {
+                const productMatch = products.find(p => p.id === item.id && p.farmerId === item.farmerId);
+                return {
+                    productName: item.name,
+                    productId: item.id,
+                    farmerId: item.farmerId,
+                    farmerName: productMatch ? (productMatch.farmerName || 'Unknown Farmer') : 'Unknown Farmer',
+                    quantity: item.qty,
+                    price: item.price,
+                    totalPrice: item.qty * item.price,
+                };
+            }),
             totalAmount: totalAmount,
             paymentMethod: {
                 type: paymentType,
